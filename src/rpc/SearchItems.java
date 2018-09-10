@@ -84,7 +84,7 @@ public class SearchItems extends HttpServlet {
 				array.put(obj);
 			}
 			RpcHelper.writeJSONArray(response, array);
-		} catch (JSONException e) {
+		} catch (Exception e) {
 			
 			e.printStackTrace();
 		} finally {
