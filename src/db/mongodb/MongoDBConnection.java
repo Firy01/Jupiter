@@ -153,13 +153,21 @@ public class MongoDBConnection implements DBConnection{
 	
 	@Override
 	public String getFullname(String userId) {
-		// TODO Auto-generated method stub
-		return null;
+		FindIterable<Document> iterable = db.getCollection(USERSDB).find(eq(USER_ID, userId));
+		
+		if(iterable != null) {
+			return iterable.first().getString("first_name") + iterable.first().getString("last_name");
+		}
+		return "";
 	}
 
 	@Override
 	public boolean verifyLogin(String userId, String password) {
-		// TODO Auto-generated method stub
+		FindIterable<Document> iterable = db.getCollection(USERSDB).find(eq(USER_ID, userId));
+		if(iterable != null ) {
+			Document doc = iterable.first();
+			return doc.getString("password").equals(password);
+		}
 		return false;
 	}
 	

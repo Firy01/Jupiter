@@ -6,20 +6,19 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.json.JSONObject;
+import javax.servlet.http.HttpSession;
 
 /**
- * Servlet implementation class FavoriteItems
+ * Servlet implementation class LogOut
  */
-@WebServlet(name = "favorite", urlPatterns = { "/favorite" })
-public class FavoriteItems extends HttpServlet {
+@WebServlet(name = "logout", urlPatterns = { "/logout" })
+public class LogOut extends HttpServlet {
 	private static final long serialVersionUID = 1L;
        
     /**
      * @see HttpServlet#HttpServlet()
      */
-    public FavoriteItems() {
+    public LogOut() {
         super();
         // TODO Auto-generated constructor stub
     }
@@ -28,19 +27,12 @@ public class FavoriteItems extends HttpServlet {
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		//response.getWriter().append("Served at: ").append(request.getContextPath());
-		String userId = request.getParameter("user_id");
 		
-		try {
-			JSONObject favItems = new JSONObject();
-			favItems.put("fav", "item1");
-			RpcHelper.writeJSONObj(response, favItems);
-		}catch(Exception e) {
-			e.printStackTrace();
-		}finally {
-			
+		HttpSession session = request.getSession(false);
+		if(session != null) {
+			session.invalidate();
 		}
+		response.sendRedirect("home.html");
 	}
 
 	/**

@@ -67,6 +67,7 @@ public class RpcHelper {
 		try {
 			for (Item item : items) {
 				result.put(item.toJSONObject());
+				System.out.println(result);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

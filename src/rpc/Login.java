@@ -7,6 +7,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -17,8 +18,12 @@ import db.DBConnectionFactory;
 /**
  * Servlet implementation class LogIn
  */
-/*@WebServlet(name = "login", urlPatterns = { "/login" })*/
+@WebServlet(name = "login", urlPatterns = { "/login" })
 public class Login extends HttpServlet {
+	private static final String USER_ID = "user_id";
+	private static final String STATUS = "status";
+	private static final String USERNAME = "username";
+	private static final String AUTHORIZED = "authorized";
 	private static final long serialVersionUID = 1L;
        
     /**
@@ -33,37 +38,72 @@ public class Login extends HttpServlet {
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		//response.getWriter().append("Served at: ").append(request.getContextPath());
+		HttpSession session = request.getSession(false);
+		if (session == null) {
+			response.setStatus(403);
+			return;
+		}
+
+		String userIdSession = session.getAttribute("user_id").toString();
 		
-		
+		DBConnection conn = DBConnectionFactory.getConnection();
+		String userId = request.getParameter("user_id");
+		JSONObject obj = new JSONObject();
+		try {
+			if (request.getSession(false) == null) {
+				response.setStatus(403);
+				obj.put(AUTHORIZED, false);
+			}else {
+				String userName = conn.getFullname(userId);
+				obj.put(AUTHORIZED, true);
+				obj.put(USERNAME, userName);
+				obj.put(STATUS, "OK");
+				obj.put(USER_ID, userId);
+			}
+			RpcHelper.writeJSONObj(response, obj);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**
 	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		DBConnection conn = DBConnectionFactory.getConnection();
-		
-		boolean authorized = false;
-		String userId = request.getParameter("username");
-		String password = request.getParameter("password");
-		authorized = conn.verifyLogin(userId, password);
-		if(authorized) {
-			String userName = conn.getFullname(userId);
-			System.out.println(userName);
-			
-			response.sendRedirect("home.html");
+		/*HttpSession session = request.getSession(false);
+		if (session == null) {
+			response.setStatus(403);
+			return;
 		}
-		/*try {
-			JSONObject obj  = new JSONObject();
-			obj.put("authorized", authorized);
-			response.getWriter().format("%s", obj);
+
+		String userIdSession = session.getAttribute("user_id").toString();*/
+		try {
+			JSONObject input = RpcHelper.readJsonObject(request);
+			String userId = input.getString(USER_ID);
+			String pwd = input.getString("password");
+			DBConnection conn = DBConnectionFactory.getConnection();
+			JSONObject obj = new JSONObject();
+
+			if (conn.verifyLogin(userId, pwd)) {
+				HttpSession sess = request.getSession();
+				sess.setAttribute(USER_ID, userId);
+				sess.setMaxInactiveInterval(10 * 60);
+				String userName = conn.getFullname(userId);
+				System.out.println(userName);
+				obj.put(AUTHORIZED, true);
+				obj.put(USERNAME, userName);
+				obj.put(STATUS, "OK");
+				obj.put(USER_ID, userId);
+				// response.sendRedirect("home.html");
+				
+			}else {
+				obj.put(AUTHORIZED, false);
+				obj.put(STATUS, "fail");
+			}
+			RpcHelper.writeJSONObj(response, obj);
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}*/
+		}
 	}
 
 }

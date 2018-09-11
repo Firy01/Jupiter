@@ -13,14 +13,113 @@
      */
     function init() {
         // Register event listeners
+    	$('login-btn').addEventListener('click', login);
         $('nearby-btn').addEventListener('click', loadNearbyItems);
         $('fav-btn').addEventListener('click', loadFavoriteItems);
         $('recommend-btn').addEventListener('click', loadRecommendedItems);
-
-        var welcomeMsg = $('welcome-msg');
+        
+        validateSession();
+       /* var welcomeMsg = $('welcome-msg');
         welcomeMsg.innerHTML = 'Welcome, ' + user_fullname;
-        initGeoLocation();
+        initGeoLocation();*/
     }
+    function validateSession() {
+		// The request parameters
+		var url = './login';
+		var req = JSON.stringify({});
+
+		// display loading message
+		showLoadingMessage('Validating session...');
+
+		// make AJAX call
+		ajax('GET', url, req,
+		// session is still valid
+		function(res) {
+			var result = JSON.parse(res);
+
+			if (result.status === 'OK') {
+				onSessionValid(result);
+			}
+		});
+	}
+    
+    function onSessionValid(result) {
+		user_id = result.user_id;
+		user_fullname = result.username;
+
+		var loginForm = $('login-form');
+		var itemNav = $('item-nav');
+		var itemList = $('item-list');
+		var avatar = $('avatar');
+		var welcomeMsg = $('welcome-msg');
+		var logoutBtn = $('logout-link');
+
+		welcomeMsg.innerHTML = 'Welcome, ' + user_fullname;
+
+		showElement(itemNav);
+		showElement(itemList);
+		showElement(avatar);
+		showElement(welcomeMsg);
+		showElement(logoutBtn, 'inline-block');
+		hideElement(loginForm);
+
+		initGeoLocation();
+	}
+
+	function onSessionInvalid() {
+		var loginForm = $('login-form');
+		var itemNav = $('item-nav');
+		var itemList = $('item-list');
+		var avatar = $('avatar');
+		var welcomeMsg = $('welcome-msg');
+		var logoutBtn = $('logout-link');
+
+		hideElement(itemNav);
+		hideElement(itemList);
+		hideElement(avatar);
+		hideElement(logoutBtn);
+		hideElement(welcomeMsg);
+
+		showElement(loginForm);
+	}
+	
+
+	function login() {
+		var username = $('username').value;
+		var password = $('password').value;
+		//password = md5(username + md5(password));
+
+		// The request parameters
+		var url = './login';
+		var req = JSON.stringify({
+			user_id : username,
+			password : password,
+		});
+
+		ajax('POST', url, req,
+		// successful callback
+		function(res) {
+			var result = JSON.parse(res);
+
+			// successfully logged in
+			if (result.status === 'OK') {
+				onSessionValid(result);
+			}
+		},
+
+		// error
+		function() {
+			showLoginError();
+		});
+	}
+
+	function showLoginError() {
+		$('login-error').innerHTML = 'Invalid username or password';
+	}
+
+	function clearLoginError() {
+		$('login-error').innerHTML = '';
+	}
 
     function initGeoLocation() {
         if (navigator.geolocation) {
@@ -153,13 +252,15 @@
 
         xhr.open(method, url, true);
 
-        xhr.onload = function() {
-        	if (xhr.status === 200) {
-        		callback(xhr.responseText);
-        	} else {
-        		errorHandler();
-        	}
-        };
+		xhr.onload = function() {
+			if (xhr.status === 200) {
+				callback(xhr.responseText);
+			} else if (xhr.status === 403) {
+				onSessionInvalid();
+			} else {
+				errorHandler();
+			}
+		};
 
         xhr.onerror = function() {
             console.error("The request couldn't be completed.");

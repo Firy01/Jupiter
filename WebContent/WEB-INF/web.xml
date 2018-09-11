@@ -6,14 +6,4 @@
     <welcome-file>home.htm</welcome-file>
     <welcome-file>home.jsp</welcome-file>
   </welcome-file-list>
- 
- <servlet>
-   <servlet-name>Login</servlet-name>
-   <servlet-class>rpc.Login</servlet-class>
-</servlet>
-
-<servlet-mapping>
-   <servlet-name>Login</servlet-name>
-   <url-pattern>/login</url-pattern>
-</servlet-mapping>
 </web-app>
