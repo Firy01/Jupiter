@@ -44,21 +44,21 @@ public class Login extends HttpServlet {
 			return;
 		}
 
-		String userIdSession = session.getAttribute("user_id").toString();
 		
 		DBConnection conn = DBConnectionFactory.getConnection();
-		String userId = request.getParameter("user_id");
+		//String userId = request.getParameter("user_id");
 		JSONObject obj = new JSONObject();
 		try {
 			if (request.getSession(false) == null) {
 				response.setStatus(403);
 				obj.put(AUTHORIZED, false);
 			}else {
-				String userName = conn.getFullname(userId);
+				String userIdSession = session.getAttribute("user_id").toString();
+				String userName = conn.getFullname(userIdSession);
 				obj.put(AUTHORIZED, true);
 				obj.put(USERNAME, userName);
 				obj.put(STATUS, "OK");
-				obj.put(USER_ID, userId);
+				obj.put(USER_ID, userIdSession);
 			}
 			RpcHelper.writeJSONObj(response, obj);
 		} catch (JSONException e) {
@@ -70,13 +70,6 @@ public class Login extends HttpServlet {
 	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		/*HttpSession session = request.getSession(false);
-		if (session == null) {
-			response.setStatus(403);
-			return;
-		}
-
-		String userIdSession = session.getAttribute("user_id").toString();*/
 		try {
 			JSONObject input = RpcHelper.readJsonObject(request);
 			String userId = input.getString(USER_ID);
